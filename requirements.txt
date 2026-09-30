@@ -1,7 +1,8 @@
-python-telegram-bot==20.3
+python-telegram-bot==18.1
+google-auth==2.25.2
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
 google-api-python-client==2.108.0
-google-cloud-speech==2.21.0
-pydub==0.25.1
 python-dotenv==1.0.1
+pydub==0.25.1
+google-cloud-speech==2.21.0
