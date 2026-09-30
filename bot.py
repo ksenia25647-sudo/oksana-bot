@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 import pickle
 import io
 
-TOKEN = (Path(__file__).parent / "token.txt").read_text(encoding="utf-8-sig").strip()
+TOKEN = os.getenv("TELEGRAM_TOKEN")
 TASKS_FILE = Path(__file__).parent / "tasks.json"
 CALENDAR_CREDS_FILE = Path(__file__).parent / "calendar_credentials.json"
 CALENDAR_TOKEN_FILE = Path(__file__).parent / "calendar_token.pickle"
