@@ -8,7 +8,6 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import pickle
-from google.cloud import speech
 import io
 
 TOKEN = (Path(__file__).parent / "token.txt").read_text(encoding="utf-8-sig").strip()
