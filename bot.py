@@ -3,12 +3,11 @@ import json
 from pathlib import Path
 from datetime import datetime, timedelta
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import Application, CommandHandler, ContextTypes
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import pickle
-import io
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 TASKS_FILE = Path(__file__).parent / "tasks.json"
@@ -96,42 +95,6 @@ def add_event_to_calendar(task_text, zoom_link=None):
         print(f"Помилка при додаванні в Calendar: {e}")
         return False
 
-def transcribe_voice_to_text(voice_file_path):
-    """Конвертує голосовий файл в текст через Google Speech-to-Text (OAuth)"""
-    try:
-        creds = None
-        if CALENDAR_TOKEN_FILE.exists():
-            with open(CALENDAR_TOKEN_FILE, 'rb') as token:
-                creds = pickle.load(token)
-        
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-        
-        client = speech.SpeechClient(credentials=creds)
-        
-        with open(voice_file_path, 'rb') as audio_file:
-            content = audio_file.read()
-        
-        audio = speech.RecognitionAudio(content=content)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.OGG_OPUS,
-            sample_rate_hertz=48000,
-            language_code="uk-UA",
-        )
-        
-        response = client.recognize(config=config, audio=audio)
-        
-        if response.results:
-            transcript = response.results[0].alternatives[0].transcript
-            return transcript
-        else:
-            return None
-            
-    except Exception as e:
-        print(f"❌ Помилка при розпізнаванню голосу: {e}")
-        return None
-
 async def start(update, context):
     name = update.effective_user.first_name
     await update.message.reply_text(
@@ -148,8 +111,7 @@ async def start(update, context):
         f"/stats — статистика\n"
         f"/top3 — топ-3 сьогодні\n"
         f"/zoom <посилання> <текст> — Zoom\n"
-        f"/tasks — список завдань\n\n"
-        f"🎤 **Голос:** просто надішли голосове повідомлення — бот конвертує в текст!",
+        f"/tasks — список завдань",
         parse_mode='Markdown'
     )
 
@@ -343,35 +305,9 @@ async def help_command(update, context):
         "/stats — статистика\n"
         "/top3 — топ-3\n"
         "/zoom <посилання> <текст>\n"
-        "/tasks — список\n\n"
-        "🎤 **Голос:** надішли голосове повідомлення для розпізнавання",
+        "/tasks — список",
         parse_mode='Markdown'
     )
-
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик голосових повідомлень"""
-    try:
-        print("🔍 DEBUG: Голос отримано! Обробляю...")
-        voice = update.message.voice
-        voice_file = await context.bot.get_file(voice.file_id)
-        voice_path = Path(__file__).parent / f"voice_{voice.file_id}.ogg"
-        
-        await voice_file.download_to_drive(str(voice_path))
-        
-        await update.message.reply_text("🎤 Обробляю голос...")
-        transcript = transcribe_voice_to_text(str(voice_path))
-        
-        if transcript:
-            await update.message.reply_text(f"✅ Розпізнано:\n\n**{transcript}**\n\nДодати як завдання? Відповідь: /add_task {transcript}", parse_mode='Markdown')
-        else:
-            await update.message.reply_text("❌ Не вдалось розпізнати голос. Спробуй ще раз.")
-        
-        if voice_path.exists():
-            voice_path.unlink()
-            
-    except Exception as e:
-        print(f"❌ ПОМИЛКА В handle_voice: {e}")
-        await update.message.reply_text(f"❌ Помилка: {e}")
 
 def main():
     app = Application.builder().token(TOKEN).build()
@@ -389,7 +325,6 @@ def main():
     app.add_handler(CommandHandler("zoom", add_zoom))
     app.add_handler(CommandHandler("tasks", list_tasks))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print("🤖 Бот запущено. Щоб зупинити, натисніть Ctrl+C.")
     app.run_polling()
 
