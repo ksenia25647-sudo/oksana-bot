@@ -397,11 +397,16 @@ async def list_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Список завдань"""
     try:
         tasks = load_tasks()
-        all_tasks = []
+        if not isinstance(tasks, dict):
+            await update.message.reply_text("⚠️ Немає завдань")
+            return
         
-        for cat in tasks:
-            for task in tasks[cat]:
-                all_tasks.append(task)
+        all_tasks = []
+        for cat in CATEGORIES.keys():
+            if cat in tasks and isinstance(tasks[cat], list):
+                for task in tasks[cat]:
+                    if isinstance(task, dict):
+                        all_tasks.append(task)
         
         if not all_tasks:
             await update.message.reply_text("📭 Немає завдань!")
