@@ -21,6 +21,11 @@ if not TOKEN:
     print("❌ TELEGRAM_TOKEN не встановлено!")
     exit(1)
 
+# Запишемо calendar credentials в файл з Environment Variable
+CALENDAR_CREDS_JSON = os.getenv("CALENDAR_CREDENTIALS")
+if CALENDAR_CREDS_JSON:
+    with open(WORK_DIR / "calendar_credentials.json", 'w') as f:
+        f.write(CALENDAR_CREDS_JSON)
 WORK_DIR = Path(__file__).parent
 CALENDAR_CREDS_FILE = WORK_DIR / "calendar_credentials.json"
 CALENDAR_TOKEN_FILE = WORK_DIR / "calendar_token.pickle"
